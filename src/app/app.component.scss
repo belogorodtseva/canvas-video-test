@@ -1,0 +1,55 @@
+// Import material theming functions
+@import '~@angular/material/theming';
+
+// Copy the palettes from your selected theme (usually theme.scss).
+$app-primary: mat-palette($mat-grey);
+$app-accent:  mat-palette($mat-light-blue);
+$app-warn:    mat-palette($mat-pink);
+
+// Create your Sass color vars (will be available in all the project)
+$primary: mat-color($app-primary);
+$accent: mat-color($app-accent);
+$warn: mat-color($app-warn);
+
+.page {
+  width: 100%;
+  height: 100%;
+  // background-color: black;
+}
+
+.pickers {
+  background-color: $primary;
+  width: 20%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding-left: 20px;
+  padding-right: 20px;
+  float: left;
+}
+
+.action {
+  position: relative;
+  // background-color: $warn;
+  width: calc(80% - 40px);
+  height: 100%;
+  float: right;
+  overflow: hidden;
+}
+
+#cat {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#canvas {
+  border: 5px solid red;
+  margin: 50px;
+  background-color: white;
+}
+
+#play-btn {
+  margin-left: 50px;
+}
