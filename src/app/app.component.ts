@@ -1,50 +1,57 @@
-import { Component, ViewChild, ElementRef, OnInit, NgZone } from '@angular/core';
+import { Component, NgZone, OnDestroy, AfterViewInit } from '@angular/core';
+import { FileService } from './file.service';
+import { Observable } from 'rxjs';
 import { Square } from './square';
 import { CCaptureWrapped } from './ccapturewrapped';
-import {  FileUploader, FileSelectDirective } from 'ng2-file-upload';
-
-const UploadURL = 'http://localhost:3000/api/upload';
+import { Validators, FormBuilder } from '@angular/forms';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+ selector: 'app-root',
+ templateUrl: './app.component.html',
+ styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
-    ctx: CanvasRenderingContext2D;
-    requestId;
-    interval;
-    squares: Square[] = [];
+export class AppComponent implements OnDestroy, AfterViewInit {
+ imageSrc = '/assets/cat.png';
+ image;
+ canvasBlock;
+ h;
+ w;
+ capturer;
+ requestId;
 
+ ctx: CanvasRenderingContext2D;
+squares: Square[] = [];
+color: string = '#e740bf';
 
-  title = 'project-test';
-  timeMove: number = 500;
-  timeColor: number = 100;
-  timeSize: number = 100;
-  size: number = 5;
-  color: string = '#e740bf';
-  url: string = 'assets/cat.png';
+fileList$: Observable<string[]> = this.fileService.list();
 
-  resizeInterval;
-  colorInterval;
-  moveInterval;
-  image;
-  canvasBlock;
-  h;
-  w;
+ displayLoader: Observable<boolean> = this.fileService.isLoading();
 
-   capturer;
+ formGroup = this.fb.group({
+   file: [null, Validators.required]
+ });
 
-    uploader: FileUploader = new FileUploader({url: UploadURL, itemAlias: 'photo'});
+ fileName;
 
-  constructor(private ngZone: NgZone) {}
+ constructor(private fileService: FileService,
+              private ngZone: NgZone,
+            private fb: FormBuilder){}
 
-  public ngOnInit() {
-    this.image = document.getElementById("cat");
-    this.canvasBlock = document.getElementById("canvas");
+ changeImage(event) {
+  this.imageSrc = `./files/${event}`;
+  if (window) {
+      this.image = window.document.getElementById("cat");
+  }
+}
+
+public ngAfterViewInit() {
+  if (window) {
+    this.image = window.document.getElementById("cat");
+    this.canvasBlock = window.document.getElementById("canvas");
     this.ctx = this.canvasBlock.getContext('2d');
     this.h = parseInt(this.canvasBlock.getAttribute("height"));
     this.w = parseInt(this.canvasBlock.getAttribute("width"));
+  }
     console.log(this.canvasBlock);
     console.log(this.ctx);
     this.capturer = new CCaptureWrapped({
@@ -56,14 +63,6 @@ export class AppComponent implements OnInit {
     setInterval(() => {
       this.tick();
     }, 60);
-
-    this.uploader.onAfterAddingFile = (file) => { file.withCredentials = false; };
-    this.uploader.onCompleteItem = (item: any, response: any, status: any, headers: any) => {
-         console.log('ImageUpload:uploaded:', item, status, response);
-         alert('File uploaded successfully');
-
-         this.url = `uploads/${item.file.name}`
-     };
   }
 
   public tick() {
@@ -81,24 +80,9 @@ export class AppComponent implements OnInit {
   }
 
   public ngOnDestroy() {
-    clearInterval(this.interval);
-    cancelAnimationFrame(this.requestId);
-  }
-
-  public onChangeMoveTime(event) {
-    this.timeMove = event.value * 1000;
-  }
-
-  public onChangeColorTime(event) {
-    this.timeColor = event.value * 1000;
-  }
-
-  public onChangeSizeTime(event) {
-    this.timeSize = event.value * 1000;
-  }
-
-  public onChangeSize(event) {
-    this.size = event.value;
+    if (window) {
+        window.cancelAnimationFrame(this.requestId);
+    }
   }
 
   public onChangeColor(event) {
@@ -108,29 +92,6 @@ export class AppComponent implements OnInit {
   }
 
   public runScript(square: Square) {
-    // const catImage = document.getElementById("cat");
-    // const actionPage = document.getElementById("actionPage");
-    //
-    // catImage.style.left = '0px';
-    // catImage.style.top = '0px';
-    //
-    // clearInterval(this.resizeInterval);
-    // clearInterval(this.colorInterval);
-    // clearInterval(this.moveInterval);
-    // this.resizeInterval = setInterval(() => {
-    //   this.resizing(catImage);
-    // }, this.timeSize);
-    //
-    // this.colorInterval = setInterval(() => {
-    //   this.recolor(catImage);
-    // }, this.timeColor);
-    //
-    // this.moveInterval = setInterval(() => {
-    //   this.moving(catImage,actionPage.clientWidth,actionPage.clientHeight);
-    // }, this.timeMove);
-    //
-    // catImage.style.transition = `width ${this.timeSize}ms ease-in-out, filter ${this.timeColor}ms ease-in-out, top ${this.timeMove}ms ease-in-out, left ${this.timeMove}ms ease-in-out`;
-    // actionPage.style.backgroundColor = this.color;
     square.action();
   }
 
@@ -143,23 +104,31 @@ export class AppComponent implements OnInit {
     this.capturer.save();
   }
 
-  public recolor(object) {
-      object.style.filter = `opacity(${Math.floor(Math.random()*50 + 50)}%) invert(${Math.floor(Math.random()*100)}%) sepia(${Math.floor(Math.random()*100)}%) saturate(${Math.floor(Math.random()*200)}%) hue-rotate(${Math.floor(Math.random()*360)}deg) brightness(${Math.floor(Math.random()*200)}%) contrast(${Math.floor(Math.random()*200)}%)`;
+  public download(fileName: string): void {
+    this.fileService.download(fileName);
   }
 
-  public resizing(object) {
-    const x = Math.floor(Math.random()*this.size*100 + 100);
-    object.style.width = x + 'px';
-  }
-
-  public moving(object, pageX, pageY) {
-    const x = Math.floor(Math.random()*(pageX-object.clientWidth));
-    const y = Math.floor(Math.random()*(pageY-object.clientHeight));
-    object.style.left = x + 'px';
-    object.style.top = y + 'px';
+  public remove(fileName: string): void {
+    this.fileService.remove(fileName);
   }
 
   public onFileChange(event) {
-    console.log(event);
+    const reader = new FileReader();
+
+    if (event.target.files && event.target.files.length) {
+      this.fileName = event.target.files[0].name;
+      const [file] = event.target.files;
+      reader.readAsDataURL(file);
+
+      reader.onload = () => {
+        this.formGroup.patchValue({
+          file: reader.result
+        });
+      };
+    }
+  }
+
+  public onSubmit(): void {
+    this.fileService.upload(this.fileName, this.formGroup.get('file').value);
   }
 }

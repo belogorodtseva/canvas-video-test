@@ -2,56 +2,29 @@
 
 <div class="pickers">
   <div class="picker__item">
+    <span class="text-middle">Our files:</span><br>
 
-        <!-- <input type="file" class="form-control" (change)="onFileChange($event)"> -->
-        <input type="file" name="photo" ng2FileSelect [uploader]="uploader" />
-
-        <button type="button" class="btn btn-success btn-s"
-          (click)="uploader.uploadAll()"
-          [disabled]="!uploader.getNotUploadedItems().length" >
-              Upload an Image
-        </button>
-
-  </div>
-  <mat-divider></mat-divider>
-  <div class="picker__item">
-    <span class="text-middle">Move Speed</span><br>
-    <span class="text-small">0.5</span>
-    <mat-slider
-      thumbLabel
-      min="0.5"
-      max="5"
-      step="0.1"
-      value="0.5"
-      (change)="onChangeMoveTime($event)">
-    </mat-slider>
-    <span class="text-small">5 sec</span>
-  </div>
-  <mat-divider></mat-divider>
-  <div class="picker__item">
-    <span class="text-middle">Color Speed</span><br>
-    <span class="text-small">0.1</span>
-      <mat-slider thumbLabel  min="0.1" max="5" step="0.05" value="0.1" color="primary" (change)="onChangeColorTime($event)"></mat-slider>
-    <span class="text-small">5 sec</span>
+    <mat-list>
+     <mat-list-item *ngFor="let fileName of fileList$ | async" >
+       {{fileName}}
+       <!-- <img src="./files/{{fileName}}"> -->
+       <button mat-flat-button (click)="download(fileName)">download</button>
+       <button mat-flat-button (click)="remove(fileName)">remove</button>
+       <button mat-flat-button color="primary" (click)="changeImage(fileName)">Let's use this one</button>
+     </mat-list-item>
+    </mat-list>
+    <mat-divider></mat-divider>
+    <span class="text-middle">Upload file:</span><br>
+    <form [formGroup] = "formGroup" (ngSubmit)="onSubmit()">
+     <input type="file" (change)="onFileChange($event)" />
+     <input type="submit" [disabled]="formGroup.invalid" value="upload" />
+    </form>
+    <img src="https://www.google.com.ua/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&ved=2ahUKEwjE47mK1J_mAhVvyqYKHTQBD5gQjRx6BAgBEAQ&url=https%3A%2F%2Fgfycat.com%2Fjointrevolvingantelopegroundsquirrel-spinner-loader&psig=AOvVaw3zz0uYh6oAG8--LfcJvoOr&ust=1575674765120047" *ngIf="displayLoader | async" />
   </div>
   <mat-divider></mat-divider>
   <div class="picker__item">
     <span class="text-middle">Background Color</span><br>
     <input [(colorPicker)]="color" [style.background]="color" (colorPickerChange)="onChangeColor($event)"/>
-  </div>
-  <mat-divider></mat-divider>
-  <div class="picker__item">
-    <span class="text-middle">Resize Speed</span><br>
-    <span class="text-small">0.1</span>
-      <mat-slider thumbLabel  min="0.1" max="5" step="0.05" value="0.1" color="warn" (change)="onChangeSizeTime($event)"></mat-slider>
-    <span class="text-small">5 sec</span>
-  </div>
-  <mat-divider></mat-divider>
-  <div class="picker__item">
-    <span class="text-middle">Resize Range</span><br>
-    <span class="text-small">0.1x </span>
-      <mat-slider thumbLabel  min="0.1" max="5" step="0.05" value="5" color="warn" (change)="onChangeSize($event)"></mat-slider>
-    <span class="text-small">5x</span>
   </div>
   <mat-divider></mat-divider>
   <div class="picker__button">
@@ -62,15 +35,10 @@
 </div>
 
 <div class="action" id="actionPage">
-  <img [src]="url" width="100px" id="cat">
+  <img [src]="imageSrc" width="100px" id="cat">
   <canvas id="canvas" #canvas width="1920" height="1080"></canvas>
   <div>
   <button id="play-btn" mat-flat-button color="accent" (click)="play()">Play</button>
   </div>
 </div>
 </div>
-
-
-
-
-<router-outlet></router-outlet>
